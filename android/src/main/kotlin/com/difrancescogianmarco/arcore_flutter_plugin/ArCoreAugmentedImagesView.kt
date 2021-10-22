@@ -59,6 +59,7 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
                     TrackingState.PAUSED -> {
                         val text = String.format("Detected Image %d", augmentedImage.index)
                         debugLog( text)
+                        sendAugmentedImageToFlutter(augmentedImage)
                     }
 
                     TrackingState.TRACKING -> {
