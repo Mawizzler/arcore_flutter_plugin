@@ -222,7 +222,7 @@ class ArCoreView(val activity: Activity, context: Context, messenger: BinaryMess
                 debugLog("Resuming ARCore now")
                 onResume()
             }
-             "pause" -> {
+            "pause" -> {
                 debugLog("Pausing ARCore now")
                 onPause()
             }
