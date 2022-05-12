@@ -253,7 +253,7 @@ class ArCoreController {
     _channel?.invokeMethod<void>('resume');
   }
    
-  void resume() {
+  void pause() {
     _channel?.invokeMethod<void>('pause');
   }
 
