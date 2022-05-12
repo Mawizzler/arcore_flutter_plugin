@@ -196,8 +196,6 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
                         val anchorNode = augmentedImageMap[index]!!.second
                         augmentedImageMap.remove(index)
                         arSceneView?.scene?.removeChild(anchorNode)
-                        val text = String.format("Removed Image %d", augmentedImage.index)
-                        debugLog( text)
                     }catch (ex: Exception) {
                         //result.error("removeARCoreNodeWithIndex", ex.localizedMessage, null)
                     }
@@ -239,6 +237,7 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
 
     private fun arScenViewInit(call: MethodCall, result: MethodChannel.Result) {
         arSceneView?.scene?.addOnUpdateListener(sceneUpdateListener)
+        arSceneView!!.planeRenderer.isVisible = false
         onResume()
         result.success(null)
     }
