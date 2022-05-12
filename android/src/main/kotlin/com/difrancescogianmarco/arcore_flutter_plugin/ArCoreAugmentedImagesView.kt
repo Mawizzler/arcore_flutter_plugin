@@ -59,13 +59,13 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
                     TrackingState.PAUSED -> {
                         val text = String.format("Detected Image %d", augmentedImage.index)
                         debugLog( text)
-                         if (!augmentedImageMap.containsKey(augmentedImage.index)) {
-                            debugLog( "${augmentedImage.name} ASSENTE")
-                            val centerPoseAnchor = augmentedImage.createAnchor(augmentedImage.centerPose)
-                            val anchorNode = AnchorNode()
-                            anchorNode.anchor = centerPoseAnchor
-                            augmentedImageMap[augmentedImage.index] = Pair.create(augmentedImage, anchorNode)
-                        }
+                        //  if (!augmentedImageMap.containsKey(augmentedImage.index)) {
+                        //     debugLog( "${augmentedImage.name} ASSENTE")
+                        //     val centerPoseAnchor = augmentedImage.createAnchor(augmentedImage.centerPose)
+                        //     val anchorNode = AnchorNode()
+                        //     anchorNode.anchor = centerPoseAnchor
+                        //     augmentedImageMap[augmentedImage.index] = Pair.create(augmentedImage, anchorNode)
+                        // }
                         sendAugmentedImageToFlutter(augmentedImage)
                     }
 
