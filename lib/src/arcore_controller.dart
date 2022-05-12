@@ -252,6 +252,10 @@ class ArCoreController {
   void resume() {
     _channel?.invokeMethod<void>('resume');
   }
+   
+  void resume() {
+    _channel?.invokeMethod<void>('pause');
+  }
 
   Future<void> removeNodeWithIndex(int index) async {
     try {
