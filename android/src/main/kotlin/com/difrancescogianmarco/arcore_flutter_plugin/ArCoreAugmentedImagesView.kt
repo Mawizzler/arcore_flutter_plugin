@@ -201,6 +201,13 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
                         result.error("removeARCoreNodeWithIndex", ex.localizedMessage, null)
                     }
                 }
+                "resume" -> {
+                    onResume();
+                }
+                "pause" -> {
+                    job.cancel()
+                    onPause();
+                }
                 "dispose" -> {
                     debugLog( " updateMaterials")
                     job.cancel()
