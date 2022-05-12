@@ -189,6 +189,19 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
                         result.error("attachObjectToAugmentedImage error", "Augmented image there isn't ona hashmap", null)
                     }
                 }
+                "removeAugmentedImageFromTracking" -> {
+                    try{
+                        val map = call.arguments as HashMap<String, Any>
+                        val index = map["index"] as Int
+                        val anchorNode = augmentedImageMap[index]!!.second
+                        augmentedImageMap.remove(index)
+                        arSceneView?.scene?.removeChild(anchorNode)
+                        val text = String.format("Removed Image %d", augmentedImage.index)
+                        debugLog( text)
+                    }catch (ex: Exception) {
+                        //result.error("removeARCoreNodeWithIndex", ex.localizedMessage, null)
+                    }
+                }
                 "removeARCoreNodeWithIndex" -> {
                     debugLog( "removeObject")
                     try {
