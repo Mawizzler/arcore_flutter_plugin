@@ -222,6 +222,10 @@ class ArCoreView(val activity: Activity, context: Context, messenger: BinaryMess
                 debugLog("Resuming ARCore now")
                 onResume()
             }
+             "pause" -> {
+                debugLog("Pausing ARCore now")
+                onPause()
+            }
             "getTrackingState" -> {
                 debugLog("1/3: Requested tracking state, returning that back to Flutter now")
 
@@ -398,10 +402,11 @@ class ArCoreView(val activity: Activity, context: Context, messenger: BinaryMess
         }
 
         val enablePlaneRenderer: Boolean? = call.argument("enablePlaneRenderer")
-        if (enablePlaneRenderer != null && !enablePlaneRenderer) {
-            debugLog(" The plane renderer (enablePlaneRenderer) is set to " + enablePlaneRenderer.toString())
-            arSceneView!!.planeRenderer.isVisible = false
-        }
+        arSceneView!!.planeRenderer.isVisible = false
+        //if (enablePlaneRenderer != null && !enablePlaneRenderer) {
+        //    debugLog(" The plane renderer (enablePlaneRenderer) is set to " + enablePlaneRenderer.toString())
+        //    arSceneView!!.planeRenderer.isVisible = false
+        //}
         
         result.success(null)
     }
