@@ -32,13 +32,14 @@ class ArCoreController {
     return arcoreInstalled;
   }
 
-  ArCoreController({this.id,
-    this.enableTapRecognizer,
-    this.enablePlaneRenderer,
-    this.enableUpdateListener,
-    this.debug = false
+  ArCoreController(
+      {this.id,
+      this.enableTapRecognizer,
+      this.enablePlaneRenderer,
+      this.enableUpdateListener,
+      this.debug = false
 //    @required this.onUnsupported,
-  }) {
+      }) {
     _channel = MethodChannel('arcore_flutter_plugin_$id');
     _channel.setMethodCallHandler(_handleMethodCalls);
     init();
@@ -144,7 +145,6 @@ class ArCoreController {
     return _channel.invokeMethod('addArCoreNode', params);
   }
 
-
   Future<String> togglePlaneRenderer() async {
     return _channel.invokeMethod('togglePlaneRenderer');
   }
@@ -160,6 +160,11 @@ class ArCoreController {
     final params = _addParentNodeNameToParams(node.toMap(), parentNodeName);
     return _channel.invokeMethod(
         'attachObjectToAugmentedImage', {'index': index, 'node': params});
+  }
+
+  removeImageFromTracking(int index) {
+    return _channel
+        .invokeMethod('removeAugmentedImageFromTracking', {'index': index});
   }
 
   Future<void> addArCoreNodeWithAnchor(ArCoreNode node,
@@ -181,12 +186,12 @@ class ArCoreController {
     return _channel.invokeMethod('removeARCoreNode', {'nodeName': nodeName});
   }
 
-  Future<void> takeScreenshot() async{
-      return _channel.invokeMethod('takeScreenshot');
+  Future<void> takeScreenshot() async {
+    return _channel.invokeMethod('takeScreenshot');
   }
 
-  Map<String, dynamic> _addParentNodeNameToParams(Map geometryMap,
-      String parentNodeName) {
+  Map<String, dynamic> _addParentNodeNameToParams(
+      Map geometryMap, String parentNodeName) {
     if (parentNodeName?.isNotEmpty ?? false)
       geometryMap['parentNodeName'] = parentNodeName;
     return geometryMap;
@@ -252,7 +257,7 @@ class ArCoreController {
   void resume() {
     _channel?.invokeMethod<void>('resume');
   }
-   
+
   void pause() {
     _channel?.invokeMethod<void>('pause');
   }
