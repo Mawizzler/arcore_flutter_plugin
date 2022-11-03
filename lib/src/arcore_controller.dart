@@ -16,6 +16,8 @@ typedef ArCoreHitResultHandler = void Function(List<ArCoreHitTestResult> hits);
 typedef ArCorePlaneHandler = void Function(ArCorePlane plane);
 typedef ArCoreAugmentedImageTrackingHandler = void Function(
     ArCoreAugmentedImage);
+typedef SessionStatusHandler = void Function();
+typedef ScaleValueHandler = void Function(String scaleValue);
 
 const UTILS_CHANNEL_NAME = 'arcore_flutter_plugin/utils';
 
@@ -59,6 +61,8 @@ class ArCoreController {
   ArCorePlaneHandler onPlaneDetected;
   String trackingState = '';
   ArCoreAugmentedImageTrackingHandler onTrackingImage;
+  SessionStatusHandler sessionStatusReady;
+  ScaleValueHandler onMinScaleValue;
 
   init() async {
     try {
@@ -120,6 +124,16 @@ class ArCoreController {
             ArCoreAugmentedImage.fromMap(call.arguments);
         onTrackingImage(arCoreAugmentedImage);
         break;
+      case 'onSessionReady':
+        if (debug) {
+          print('flutter Session Ready');
+        }
+        sessionStatusReady();
+        break;
+      case 'onMinScaleValue':
+        final scaleValue = call.arguments;
+        onMinScaleValue(scaleValue);
+        break;
       case 'togglePlaneRenderer':
         if (debug) {
           print('Toggling Plane Renderer Visibility');
@@ -165,6 +179,11 @@ class ArCoreController {
   removeImageFromTracking(int index) {
     return _channel
         .invokeMethod('removeAugmentedImageFromTracking', {'index': index});
+  }
+
+  scaleNode(int index, double scaleValue) {
+    return _channel
+        .invokeMethod('scaleNode', {'index': index, 'scaleValue': scaleValue});
   }
 
   Future<void> addArCoreNodeWithAnchor(ArCoreNode node,

@@ -9,11 +9,11 @@ import android.util.Log
 import android.widget.ImageView
 import android.widget.Toast
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreNode
-import com.google.ar.sceneform.assets.RenderableSource
 import com.google.ar.sceneform.rendering.Material
 import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.ar.sceneform.rendering.Renderable
 import com.google.ar.sceneform.rendering.ViewRenderable
+import com.google.ar.sceneform.animation.ModelAnimator
 import java.util.function.Consumer
 
 import android.widget.RelativeLayout.LayoutParams;
@@ -47,24 +47,14 @@ class RenderableCustomFactory {
                     }
                 } else if (url != null) {
                     val modelRenderableBuilder = ModelRenderable.builder()
-                    val renderableSourceBuilder = RenderableSource.builder()
-                    if(url.endsWith(".glb")){
-                        renderableSourceBuilder
-                            .setSource(context, Uri.parse(url), RenderableSource.SourceType.GLB)
-                            .setScale(0.5f)
-                            .setRecenterMode(RenderableSource.RecenterMode.ROOT)
-                    } else {
-                        renderableSourceBuilder
-                            .setSource(context, Uri.parse(url), RenderableSource.SourceType.GLTF2)
-                            .setScale(0.5f)
-                            .setRecenterMode(RenderableSource.RecenterMode.ROOT)
-                    }
 
                     modelRenderableBuilder
-                            .setSource(context, renderableSourceBuilder.build())
-                            .setRegistryId(url)
+                            .setSource(context, Uri.parse(url))
+                            .setIsFilamentGltf(true)
                             .build()
                             .thenAccept { renderable ->
+                                renderable.setShadowCaster(false);
+                                renderable.setShadowReceiver(true);
                                 handler(renderable, null)
                             }
                             .exceptionally { throwable ->

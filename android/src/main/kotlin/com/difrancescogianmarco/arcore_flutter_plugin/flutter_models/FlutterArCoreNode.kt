@@ -7,6 +7,7 @@ import com.google.ar.core.Pose
 import com.google.ar.sceneform.Node
 import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
+import android.util.Log
 
 class FlutterArCoreNode(map: HashMap<String, *>) {
 
@@ -41,6 +42,7 @@ class FlutterArCoreNode(map: HashMap<String, *>) {
         node.name = name
         node.localPosition = position
         node.localScale = scale
+        Log.d("TAG","+++ Roation " +rotation)
         node.localRotation = rotation
 
         return node
@@ -49,6 +51,7 @@ class FlutterArCoreNode(map: HashMap<String, *>) {
     fun getPosition(): FloatArray {
         return floatArrayOf(position.x, position.y, position.z)
     }
+    
 
     fun getRotation(): FloatArray {
         return floatArrayOf(rotation.x, rotation.y, rotation.z, rotation.w)
