@@ -19,12 +19,13 @@ class DecodableUtils {
         }
 
         fun parseQuaternion(vector: HashMap<String, Double>?): Quaternion? {
+            Log.d("TAG","+++ Parse " + vector)
             if (vector != null) {
                 val x: Float = (vector["x"] as Double).toFloat()
                 val y: Float = (vector["y"] as Double).toFloat()
                 val z: Float = (vector["z"] as Double).toFloat()
                 val w: Float = (vector["w"] as Double).toFloat()
-                return Quaternion(x, y, z, w)
+                return Quaternion.axisAngle(Vector3(x, y, z), w)
             }
             return null
         }

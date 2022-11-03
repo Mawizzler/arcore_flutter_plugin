@@ -50,24 +50,29 @@ open class BaseArCoreView(val activity: Activity, context: Context, messenger: B
     private fun setupLifeCycle(context: Context) {
         activityLifecycleCallbacks = object : Application.ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+                Log.d("test","+++ onActivityCreated")
                 debugLog("onActivityCreated")
             }
 
             override fun onActivityStarted(activity: Activity) {
+                Log.d("test","+++ onActivityStarted")
                 debugLog("onActivityStarted")
             }
 
             override fun onActivityResumed(activity: Activity) {
+                Log.d("test","+++ onActivityResumed")
                 debugLog("onActivityResumed")
                 onResume()
             }
 
             override fun onActivityPaused(activity: Activity) {
+                Log.d("test","+++ onActivityPaused")
                 debugLog("onActivityPaused")
                 onPause()
             }
 
             override fun onActivityStopped(activity: Activity) {
+                Log.d("test","+++ onActivityStopped")
                 debugLog("onActivityStopped")
                 onPause()
             }
@@ -89,6 +94,7 @@ open class BaseArCoreView(val activity: Activity, context: Context, messenger: B
     }
 
     override fun dispose() {
+        Log.d("test","+++dispose")
         if (arSceneView != null) {
             onPause()
             onDestroy()

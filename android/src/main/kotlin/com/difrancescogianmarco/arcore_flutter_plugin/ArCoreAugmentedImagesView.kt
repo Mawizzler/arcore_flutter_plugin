@@ -8,6 +8,8 @@ import android.util.Log
 import android.util.Pair
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCoreNode
 import com.difrancescogianmarco.arcore_flutter_plugin.flutter_models.FlutterArCorePose
+import com.gorisse.thomas.sceneform.light.LightEstimationConfig
+import com.gorisse.thomas.sceneform.*
 import com.difrancescogianmarco.arcore_flutter_plugin.utils.ArCoreUtils
 import com.google.ar.core.AugmentedImage
 import com.google.ar.core.AugmentedImageDatabase
@@ -17,6 +19,10 @@ import com.google.ar.core.exceptions.CameraNotAvailableException
 import com.google.ar.core.exceptions.UnavailableException
 import com.google.ar.sceneform.AnchorNode
 import com.google.ar.sceneform.Scene
+import com.google.ar.sceneform.math.Vector3
+import com.google.ar.sceneform.collision.Box
+import com.google.ar.sceneform.rendering.RenderableInstance;
+import com.google.ar.sceneform.math.Quaternion;
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -27,6 +33,7 @@ import com.google.ar.core.exceptions.*
 import com.google.ar.core.*
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
+
 
 class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger: BinaryMessenger, id: Int, val useSingleImage: Boolean, debug: Boolean) : BaseArCoreView(activity, context, messenger, id, debug), CoroutineScope {
 
@@ -46,7 +53,7 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
         sceneUpdateListener = Scene.OnUpdateListener { frameTime ->
 
             val frame = arSceneView?.arFrame ?: return@OnUpdateListener
-
+            
             // If there is no frame or ARCore is not tracking yet, just return.
             if (frame.camera.trackingState != TrackingState.TRACKING) {
                 return@OnUpdateListener
@@ -58,14 +65,6 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
                 when (augmentedImage.trackingState) {
                     TrackingState.PAUSED -> {
                         val text = String.format("Detected Image %d", augmentedImage.index)
-                        debugLog( text)
-                        //  if (!augmentedImageMap.containsKey(augmentedImage.index)) {
-                        //     debugLog( "${augmentedImage.name} ASSENTE")
-                        //     val centerPoseAnchor = augmentedImage.createAnchor(augmentedImage.centerPose)
-                        //     val anchorNode = AnchorNode()
-                        //     anchorNode.anchor = centerPoseAnchor
-                        //     augmentedImageMap[augmentedImage.index] = Pair.create(augmentedImage, anchorNode)
-                        // }
                         sendAugmentedImageToFlutter(augmentedImage)
                     }
 
@@ -84,11 +83,11 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
 
                     TrackingState.STOPPED -> {
                         debugLog( "STOPPED: ${augmentedImage.name}")
-                        val anchorNode = augmentedImageMap[augmentedImage.index]!!.second
-                        augmentedImageMap.remove(augmentedImage.index)
-                        arSceneView?.scene?.removeChild(anchorNode)
-                        val text = String.format("Removed Image %d", augmentedImage.index)
-                        debugLog( text)
+                        // val anchorNode = augmentedImageMap[augmentedImage.index]!!.second
+                        // augmentedImageMap.remove(augmentedImage.index)
+                        // arSceneView?.scene?.removeChild(anchorNode)
+                        // val text = String.format("Removed Image %d", augmentedImage.index)
+                        // debugLog( text)
                     }
 
                     else -> {
@@ -108,6 +107,20 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
         map["trackingMethod"] = augmentedImage.trackingMethod.ordinal
         activity.runOnUiThread {
             methodChannel.invokeMethod("onTrackingImage", map)
+        }
+    }
+
+    private fun sendSessionReadyToFlutter() {
+        val map: HashMap<String, Any> = HashMap<String, Any>()
+        map["status"] = "READY"
+        activity.runOnUiThread {
+            methodChannel.invokeMethod("onSessionReady", map)
+        }
+    }
+
+    private fun sendScaleValueToFlutter(scaleValue: Float) {
+        activity.runOnUiThread {
+            methodChannel.invokeMethod("onMinScaleValue", ""+scaleValue)
         }
     }
 
@@ -165,20 +178,60 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
                     val dbByteArray = map["bytes"] as? ByteArray
                     setupSession(dbByteArray, false)
                 }
+                "getBoundingBox" -> {
+                    debugLog( "LOAD DB")
+                    val map = call.arguments as HashMap<String, Any>
+                    val dbByteArray = map["bytes"] as? ByteArray
+                    setupSession(dbByteArray, false)
+                }
                 "attachObjectToAugmentedImage" -> {
                     debugLog( "attachObjectToAugmentedImage")
                     val map = call.arguments as HashMap<String, Any>
                     val flutterArCoreNode = FlutterArCoreNode(map["node"] as HashMap<String, Any>)
                     val index = map["index"] as Int
                     if (augmentedImageMap.containsKey(index)) {
-//                        val augmentedImage = augmentedImageMap[index]!!.first
+                        val augmentedImage = augmentedImageMap[index]!!.first
                         val anchorNode = augmentedImageMap[index]!!.second
 //                        setImage(augmentedImage, anchorNode)
 //                        onAddNode(flutterArCoreNode, result)
                         NodeFactory.makeNode(activity.applicationContext, flutterArCoreNode, debug) { node, throwable ->
                             debugLog( "inserted ${node?.name}")
                             if (node != null) {
+                                Log.d(TAG, "+++ SIZE")
+                                val box = node.collisionShape as Box
+                                val sizes = box.getSize()
+                                Log.d(TAG, "+++ " + box.getSize())
+                                Log.d(TAG, "+++ " + augmentedImage.extentX + " - " + augmentedImage.extentX);
+                               
+
+                                val height = sizes.y
+                                val width = sizes.x
+                                val depth = sizes.z
+                                var scaleValue = 0.25f
+
+                                if (height >= width && height >= depth) {
+                                    scaleValue = augmentedImage.extentX / height
+                                }
+                                if (width >= height && width >= depth) {
+                                    scaleValue = augmentedImage.extentX / width
+                                }
+                                if (depth >= height && depth >= width) {
+                                    scaleValue = augmentedImage.extentX / depth
+                                }
+                                
+                                node.localScale = Vector3(scaleValue * 1.2f, scaleValue * 1.2f, scaleValue * 1.2f)
+                                sendScaleValueToFlutter(scaleValue * 1.2f);
+                                //node.localRotation = Quaternion.axisAngle(Vector3(1f, 0f, 0f), -90f)
+                                Log.d(TAG, "+++ " + node.worldScale);
+                                
+                                val renderableInstance = node.getRenderableInstance()
+                                Log.d(TAG, "+++ ANIMTION: " + renderableInstance.hasAnimations());
+                                if (renderableInstance != null && renderableInstance.hasAnimations()) {
+                                    renderableInstance.animate(true).start();
+                                }
+
                                 node.setParent(anchorNode)
+                                
                                 arSceneView?.scene?.addChild(anchorNode)
                                 result.success(null)
                             } else if (throwable != null) {
@@ -191,12 +244,32 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
                 }
                 "removeAugmentedImageFromTracking" -> {
                     try{
+                        Log.d(TAG,"+++ REMOVE")
                         val map = call.arguments as HashMap<String, Any>
                         val index = map["index"] as Int
+                        Log.d(TAG,"+++ REMOVE " + index)
+                        Log.d(TAG,"+++ REMOVE " + augmentedImageMap)
                         val anchorNode = augmentedImageMap[index]!!.second
                         augmentedImageMap.remove(index)
                         arSceneView?.scene?.removeChild(anchorNode)
                     }catch (ex: Exception) {
+                        Log.d(TAG,"+++ REMOVE ERROR " +  ex.localizedMessage)
+                        //result.error("removeARCoreNodeWithIndex", ex.localizedMessage, null)
+                    }
+                }
+                "scaleNode" -> {
+                    try{
+                        val map = call.arguments as HashMap<String, Any>
+                        val index = map["index"] as Int
+                        val scaleValue = map["scaleValue"] as Double
+                        val anchorNode = augmentedImageMap[index]!!.second
+                        val children = anchorNode.getChildren()
+                        for (child in children) {
+                            child.localScale = Vector3(scaleValue.toFloat() ,scaleValue.toFloat() ,scaleValue.toFloat() )
+                        }
+
+                    }catch (ex: Exception) {
+                        Log.d(TAG,"+++ REMOVE ERROR " +  ex.localizedMessage)
                         //result.error("removeARCoreNodeWithIndex", ex.localizedMessage, null)
                     }
                 }
@@ -238,6 +311,7 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
     private fun arScenViewInit(call: MethodCall, result: MethodChannel.Result) {
         arSceneView?.scene?.addOnUpdateListener(sceneUpdateListener)
         arSceneView!!.planeRenderer.isVisible = false
+        arSceneView!!.lightEstimationConfig = LightEstimationConfig(Config.LightEstimationMode.DISABLED)
         onResume()
         result.success(null)
     }
@@ -270,7 +344,7 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
                     config.focusMode = Config.FocusMode.AUTO
                     config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
                     session.configure(config)
-                    arSceneView?.setupSession(session)
+                    arSceneView?.setSession(session)
                 }
             } catch (e: UnavailableException) {
                 ArCoreUtils.handleSessionException(activity, e)
@@ -295,6 +369,7 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
             val config = Config(session)
             config.focusMode = Config.FocusMode.AUTO
             config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
+            config.setLightEstimationMode(Config.LightEstimationMode.DISABLED);
             bytes?.let {
                 if (useSingleImage) {
                     if (!addImageToAugmentedImageDatabase(config, bytes)) {
@@ -307,14 +382,14 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
                 }
             }
             session.configure(config)
-            arSceneView?.setupSession(session)
+            arSceneView?.setSession(session)
         } catch (ex: Exception) {
             debugLog( ex.localizedMessage)
         }
     }
 
     fun setupSession(bytesMap: Map<String, ByteArray>?) {
-        debugLog( "setupSession()")
+        debugLog( "+++ setupSession()")
         try {
             val session = arSceneView?.session ?: return
             val config = Config(session)
@@ -331,24 +406,26 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
     private fun addMultipleImagesToAugmentedImageDatabase(config: Config, bytesMap: Map<String, ByteArray>, session: Session) {
         debugLog( "addImageToAugmentedImageDatabase")
         val augmentedImageDatabase = AugmentedImageDatabase(arSceneView?.session)
-
+       
         launch {
             val operation = async(Dispatchers.Default) {
+                 Log.d(TAG,"+++ SET SESSION CONFIG")
                 for ((key, value) in bytesMap) {
                     val augmentedImageBitmap = loadAugmentedImageBitmap(value)
                     try {
                         augmentedImageDatabase.addImage(key, augmentedImageBitmap)
                     } catch (ex: Exception) {
-                        debugLog("Image with the title $key cannot be added to the database. " +
+                        Log.d(TAG,"+++ Image with the title $key cannot be added to the database. " +
                         "The exception was thrown: " + ex?.toString())
                     }
                 }
                 if (augmentedImageDatabase?.getNumImages() == 0) {
                     throw Exception("Could not setup augmented image database")
                 }
-                config.augmentedImageDatabase = augmentedImageDatabase
-                session.configure(config)
-                arSceneView?.setupSession(session)
+                config.augmentedImageDatabase = augmentedImageDatabase               
+                arSceneView?.setSessionConfig(config,true)
+                Log.d(TAG,"+++ SET SESSION CONFIG DONE")
+                sendSessionReadyToFlutter()
             }
             operation.await()
         }
