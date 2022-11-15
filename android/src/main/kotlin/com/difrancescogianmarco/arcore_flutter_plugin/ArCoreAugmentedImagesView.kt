@@ -415,8 +415,9 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
                     try {
                         augmentedImageDatabase.addImage(key, augmentedImageBitmap)
                     } catch (ex: Exception) {
-                        Log.d(TAG,"+++ Image with the title $key cannot be added to the database. " +
-                        "The exception was thrown: " + ex?.toString())
+                        sendImageErrorToFlutter(key)
+                        // Log.d(TAG,"+++ Image with the title $key cannot be added to the database. " +
+                        // "The exception was thrown: " + ex?.toString())
                     }
                 }
                 if (augmentedImageDatabase?.getNumImages() == 0) {
@@ -428,6 +429,12 @@ class ArCoreAugmentedImagesView(activity: Activity, context: Context, messenger:
                 sendSessionReadyToFlutter()
             }
             operation.await()
+        }
+    }
+
+    private fun sendImageErrorToFlutter(key:String) {
+        activity.runOnUiThread {
+            methodChannel.invokeMethod("onImageError", key)
         }
     }
 

@@ -17,6 +17,7 @@ typedef ArCorePlaneHandler = void Function(ArCorePlane plane);
 typedef ArCoreAugmentedImageTrackingHandler = void Function(
     ArCoreAugmentedImage);
 typedef SessionStatusHandler = void Function();
+typedef ImageErrorHandler = void Function(String key);
 typedef ScaleValueHandler = void Function(String scaleValue);
 
 const UTILS_CHANNEL_NAME = 'arcore_flutter_plugin/utils';
@@ -63,6 +64,7 @@ class ArCoreController {
   String trackingState = '';
   ArCoreAugmentedImageTrackingHandler onTrackingImage;
   SessionStatusHandler sessionStatusReady;
+  ImageErrorHandler onImageError;
   ScaleValueHandler onMinScaleValue;
 
   init() async {
@@ -130,6 +132,10 @@ class ArCoreController {
           print('flutter Session Ready');
         }
         sessionStatusReady();
+        break;
+      case 'onImageError':
+        final key = call.arguments;
+        onImageError(key);
         break;
       case 'onMinScaleValue':
         final scaleValue = call.arguments;
