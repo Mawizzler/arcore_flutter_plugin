@@ -36,14 +36,11 @@ class ArCoreController {
   }
 
   ArCoreController(
-      {this.id,
+      {required this.id,
       this.enableTapRecognizer,
       this.enablePlaneRenderer,
       this.enableUpdateListener,
-      this.debug = false
-//    @required this.onUnsupported,
-      }) {
-      }) {
+      this.debug = false}) {
     _channel = MethodChannel('arcore_flutter_plugin_$id');
     _channel.setMethodCallHandler(_handleMethodCalls);
     init();
@@ -53,7 +50,7 @@ class ArCoreController {
   final bool? enableUpdateListener;
   final bool? enableTapRecognizer;
   final bool? enablePlaneRenderer;
-  final bool? debug;
+  final bool debug;
   late MethodChannel _channel;
   StringResultHandler? onError;
   StringResultHandler? onNodeTap;
@@ -62,10 +59,10 @@ class ArCoreController {
   ArCoreHitResultHandler? onPlaneTap;
   ArCorePlaneHandler? onPlaneDetected;
   String trackingState = '';
-  ArCoreAugmentedImageTrackingHandler onTrackingImage;
-  SessionStatusHandler sessionStatusReady;
-  ImageErrorHandler onImageError;
-  ScaleValueHandler onMinScaleValue;
+  late ArCoreAugmentedImageTrackingHandler onTrackingImage;
+  late SessionStatusHandler sessionStatusReady;
+  late ImageErrorHandler onImageError;
+  late ScaleValueHandler onMinScaleValue;
 
   init() async {
     try {
@@ -212,8 +209,8 @@ class ArCoreController {
     return _channel.invokeMethod('takeScreenshot');
   }
 
-  Map<String, dynamic> _addParentNodeNameToParams(
-      Map geometryMap, String parentNodeName) {
+  Map<dynamic, dynamic> _addParentNodeNameToParams(
+      Map geometryMap, String? parentNodeName) {
     if (parentNodeName?.isNotEmpty ?? false)
       geometryMap['parentNodeName'] = parentNodeName;
     return geometryMap;
@@ -257,14 +254,14 @@ class ArCoreController {
   }
 
   Future<void> loadMultipleAugmentedImage(
-      {@required Map<String, Uint8List>? bytesMap}) {
+      {required Map<String, Uint8List>? bytesMap}) {
     assert(bytesMap != null);
     return _channel.invokeMethod('load_multiple_images_on_db', {
       'bytesMap': bytesMap,
     });
   }
 
-  Future<void> loadAugmentedImagesDatabase({@required Uint8List? bytes}) {
+  Future<void> loadAugmentedImagesDatabase({required Uint8List? bytes}) {
     assert(bytes != null);
     return _channel.invokeMethod('load_augmented_images_database', {
       'bytes': bytes,
